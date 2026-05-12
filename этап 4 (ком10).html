@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Creative Lab — Фестиваль нейросетей в творчестве</title>
+    <style>
+        :root {
+            --bg-deep: #0a0412;
+            --bg-purple: #1a0b2e;
+            --neon-purple: #b026ff;
+            --neon-cyan: #00f3ff;
+            --gold-accent: #ffd700;
+            --text-main: #e8e0f5;
+            --text-muted: #a89bc2;
+            --glass-bg: rgba(176, 38, 255, 0.06);
+            --border-glow: 1px solid rgba(176, 38, 255, 0.35);
+            --shadow-neon: 0 0 24px rgba(176, 38, 255, 0.4), 0 0 8px rgba(0, 243, 255, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* === ANIMATED BACKGROUND === */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(176, 38, 255, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 243, 255, 0.15) 0%, transparent 50%),
+                linear-gradient(180deg, var(--bg-purple) 0%, var(--bg-deep) 100%);
+            z-index: -2;
+            animation: bgShift 12s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift {
+            0% { background-position: 0% 0%, 100% 100%, 0% 0%; }
+            100% { background-position: 100% 100%, 0% 0%, 0% 0%; }
+        }
+
+        /* Grid overlay */
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(176, 38, 255, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(176, 38, 255, 0.08) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+            mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 80%);
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--neon-cyan);
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
+            50% { transform: translateY(-20px) translateX(10px); opacity: 1; }
+        }
+
+        /* === TYPOGRAPHY & UTILS === */
+        .gradient-text {
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(176, 38, 255, 0.5);
+        }
+        .gold-accent { color: var(--gold-accent); font-weight: 600; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        section { padding: 90px 0; position: relative; }
+
+        /* === ANIMATIONS ON SCROLL === */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px) scale(0.98);
+            transition: all 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* === HERO === */
+        .hero {
+            min-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero h1 {
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -1.5px;
+            animation: glowPulse 3s ease-in-out infinite alternate;
+        }
+        @keyframes glowPulse {
+            0% { text-shadow: 0 0 15px rgba(176, 38, 255, 0.6); }
+            100% { text-shadow: 0 0 30px rgba(0, 243, 255, 0.8), 0 0 60px rgba(176, 38, 255, 0.4); }
+        }
+        .hero .tagline {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            max-width: 750px;
+        }
+        .meta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+        .meta span {
+            background: var(--glass-bg);
+            border: var(--border-glow);
+            padding: 10px 18px;
+            border-radius: 14px;
+            backdrop-filter: blur(8px);
+            box-shadow: var(--shadow-neon);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .meta span:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.6);
+        }
+
+        .btn-cta {
+            display: inline-block;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
+            color: #fff;
+            padding: 18px 44px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            text-decoration: none;
+            box-shadow: 0 0 28px rgba(176, 38, 255, 0.6);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-cta::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .btn-cta:hover::after { left: 100%; }
+        .btn-cta:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.7);
+        }
+
+        /* === GLASS CARDS === */
+        .glass-card {
+            background: var(--glass-bg);
+            border: var(--border-glow);
+            border-radius: 18px;
+            padding: 36px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-neon);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .glass-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 0 35px rgba(176, 38, 255, 0.5);
+        }
+
+        /* === SECTIONS === */
+        .about h2, .program h2, .speakers h2, .details h2 {
+            font-size: 2.2rem;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .about p {
+            max-width: 820px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+        }
+
+        /* === TIMELINE === */
+        .timeline { display: grid; gap: 18px; max-width: 820px; margin: 0 auto; }
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 18px 22px;
+            border-left: 3px solid var(--neon-purple);
+            background: var(--glass-bg);
+            border-radius: 0 14px 14px 0;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .timeline-item:hover {
+            background: rgba(176, 38, 255, 0.12);
+            transform: translateX(6px);
+        }
+        .time { font-weight: 700; color: var(--neon-cyan); min-width: 110px; }
+        .block-title { font-weight: 600; margin-bottom: 4px; }
+        .block-desc { font-size: 0.95rem; color: var(--text-muted); }
+
+        /* === SPEAKERS === */
+        .speakers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 26px;
+        }
+        .speaker-card { text-align: center; padding: 30px 22px; }
+        .speaker-card h3 { font-size: 1.25rem; margin-bottom: 8px; }
+        .speaker-card .topic { color: var(--neon-cyan); font-weight: 500; margin-bottom: 12px; min-height: 40px; }
+        .speaker-card p { font-size: 0.95rem; color: var(--text-muted); }
+
+        /* === DETAILS & FOOTER === */
+        .details {
+            text-align: center;
+            background: linear-gradient(180deg, transparent, rgba(176, 38, 255, 0.1));
+        }
+        .details .quote {
+            font-size: 1.25rem;
+            color: var(--gold-accent);
+            font-weight: 600;
+            margin: 28px 0;
+            padding: 18px;
+            border: 1px dashed var(--gold-accent);
+            border-radius: 14px;
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.05);
+            animation: borderPulse 3s infinite;
+        }
+        @keyframes borderPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+        }
+        footer {
+            text-align: center;
+            padding: 44px 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.4rem; }
+            .timeline-item { flex-direction: column; gap: 8px; border-left: none; border-top: 3px solid var(--neon-purple); border-radius: 14px 14px 0 0; }
+            .time { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grid-overlay"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- HERO -->
+    <section class="hero reveal">
+        <div class="container">
+            <h1 class="gradient-text">AI CREATIVE LAB</h1>
+            <p class="tagline">Интерактивный фестиваль и практический воркшоп. Генерируй изображения, музыку, видео и медиа-проекты вместе с нейросетями.</p>
+            <div class="meta">
+                <span> 12 мая 2026</span>
+                <span>⏰ 10:00–17:30</span>
+                <span>📍 Актовый зал + медиа-зона университета</span>
+            </div>
+            <a href="#register" class="btn-cta">Зарегистрироваться</a>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about reveal" id="about">
+        <div class="container">
+            <div class="glass-card">
+                <h2 class="gradient-text">О мероприятии</h2>
+                <p><strong>«AI Creative Lab»</strong> — это не лекция о будущем, а практический фестиваль о настоящем. Нейросети уже рисуют, сочиняют музыку и монтируют видео. Но главный инструмент по-прежнему — человек. Мы покажем, как связать ваш креатив с возможностями ИИ.</p>
+                <br>
+                <p>Кому подойдет: студентам творческих и технических направлений, дизайнерам, SMM-специалистам, видеографам и всем, кто хочет перестать бояться нейросетей и начать использовать их в учебе и работе. Уровень подготовки — начальный и базовый.</p>
+                <br>
+                <p>Что вас ждет: 70% практики, 30% теории. Генерация изображений и видео, создание AI-музыки, битва промптов и командный воркшоп с финальным демо. К концу дня у вас будет готовый digital-проект для портфолио и четкий алгоритм работы с ИИ-инструментами.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROGRAM -->
+    <section class="program reveal" id="program">
+        <div class="container">
+            <h2 class="gradient-text">Программа дня</h2>
+            <div class="timeline">
+                <div class="timeline-item"><span class="time">10:00–10:30</span><div><div class="block-title">Регистрация & Welcome-zone</div><div class="block-desc">Нетворкинг, выдача бейджей, QR-гайд по инструментам</div></div></div>
+                <div class="timeline-item"><span class="time">10:30–11:00</span><div><div class="block-title">Открытие</div><div class="block-desc">Приветствие, ключевая идея «Человек + ИИ», правила дня</div></div></div>
+                <div class="timeline-item"><span class="time">11:00–11:40</span><div><div class="block-title">Лекция 1: AI-art и дизайн</div><div class="block-desc">Kandinsky, Midjourney, Figma AI. Пайплайн от промпта до макета</div></div></div>
+                <div class="timeline-item"><span class="time">11:40–12:20</span><div><div class="block-title">Практика 1</div><div class="block-desc">Генерация изображений, разбор ошибок в промптах</div></div></div>
+                <div class="timeline-item"><span class="time">12:20–13:00</span><div><div class="block-title">Лекция 2: AI-музыка</div><div class="block-desc">Suno, Udio, нейросетевой саунд-дизайн для рекламы и подкастов</div></div></div>
+                <div class="timeline-item"><span class="time">13:00–14:00</span><div><div class="block-title">Перерыв</div><div class="block-desc">Нетворкинг, кофе-зона, свободные эксперименты с AI</div></div></div>
+                <div class="timeline-item"><span class="time">14:00–14:50</span><div><div class="block-title">Практика 2: AI-видео</div><div class="block-desc">Runway, Pika, CapCut AI. От идеи до вирусного короткого ролика</div></div></div>
+                <div class="timeline-item"><span class="time">14:50–15:30</span><div><div class="block-title">Prompt Battle</div><div class="block-desc">Командный конкурс на лучший промпт. Оцениваем точность, креатив, скорость</div></div></div>
+                <div class="timeline-item"><span class="time">15:30–16:20</span><div><div class="block-title">Командная работа</div><div class="block-desc">Сборка мини-проекта: постер + аудио + видео-сниппет</div></div></div>
+                <div class="timeline-item"><span class="time">16:20–17:00</span><div><div class="block-title">Demo Day</div><div class="block-desc">Презентация работ, голосование жюри, фидбек</div></div></div>
+                <div class="timeline-item"><span class="time">17:00–17:30</span><div><div class="block-title">Финал</div><div class="block-desc">Награждение, закрытие, сбор контактов, ссылка на галерею</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SPEAKERS -->
+    <section class="speakers reveal" id="speakers">
+        <div class="container">
+            <h2 class="gradient-text">Спикеры</h2>
+            <div class="speakers-grid">
+                <div class="glass-card speaker-card">
+                    <h3>Дарья Орлова</h3>
+                    <div class="topic">AI-art и цифровой дизайн</div>
+                    <p>Разбор рабочих пайплайнов, как избегать артефактов и сохранять авторский стиль. 3 готовых сценария генерации коммерческой графики.</p>
+                </div>
+                <div class="glass-card speaker-card">
+                    <h3>Максим Беляев</h3>
+                    <div class="topic">Музыка и нейросети</div>
+                    <p>Suno, Udio, нейросетевой саунд-дизайн. Создание уникального аудиобрендинга за 20 минут, основы авторских прав на AI-контент.</p>
+                </div>
+                <div class="glass-card speaker-card">
+                    <h3>Елена Миронова</h3>
+                    <div class="topic">Создание контента через ИИ</div>
+                    <p>Runway, Pika, CapCut AI: от идеи до вирусного короткого видео. Пошаговый алгоритм создания AI-ролика и подборка бесплатных тарифов.</p>
+                </div>
+                <div class="glass-card speaker-card">
+                    <h3>Артём Соколов</h3>
+                    <div class="topic">Prompt Engineering для креаторов</div>
+                    <p>Фреймворки промптинга (CTF, CREATE), итеративная доработка. Универсальная формула промпта и таблица модификаторов.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DETAILS & CTA -->
+    <section class="details reveal" id="register">
+        <div class="container">
+            <h2 class="gradient-text">Присоединяйся к лаборатории</h2>
+            <p>Места ограничены. Станьте частью нового творческого стандарта.</p>
+            <div class="quote">«ИИ — это инструмент творчества, а не его замена»</div>
+            <br><br>
+            <a href="#" class="btn-cta">Зарегистрироваться →</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 AI Creative Lab. Студенческий фестиваль цифрового творчества.</p>
+            <p>Контакты для организаторов: ai-lab@university.ru | Telegram: @aicreativelab</p>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll Reveal Animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Generate floating particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 5 + 's';
+            p.style.animationDuration = (4 + Math.random() * 4) + 's';
+            particlesContainer.appendChild(p);
+        }
+    </script>
+</body>
+</html>
